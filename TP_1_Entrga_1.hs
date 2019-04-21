@@ -53,3 +53,67 @@ queTrucazo unNombre unAuto = incrementarVelocidadEnamorado (fingirAmor unNombre 
 
 turbo :: Truco
 turbo unAuto = unAuto { nivelDeNafta = 0, velocidad = (velocidad unAuto) + ((nivelDeNafta unAuto) *10)}
+
+
+--------------------------- Casos de prueba----------------------------
+--1 
+
+--Consultar la nafta de RochaMcQueen luego de realizar su truco. 
+--(nafta.aplicarTruco) rochaMcQueen
+
+--Consultar la nafta de biankerr luego de realizar su truco. 
+--(nafta.aplicarTruco) biankerr
+
+--Consultar la nafta de gushtav luego de realizar su truco. 
+--(nafta.aplicarTruco) gushtav
+
+--Consultar la enamorada de Rodra cuando elige a Petra.
+--(enamorado.aplicarTruco) rodra
+
+--2 
+
+--Consultar la velocidad de RochaMcQueen luego de incrementar su velocidad.
+-- incrementarVelocidadEnamorado rochaMcQueen
+
+--Consultar la velocidad de biankerr luego de incrementar su velocidad.
+-- incrementarVelocidadEnamorado biankerr
+
+--Consultar la velocidad de gushtav luego de incrementar su velocidad.
+-- incrementarVelocidadEnamorado gushtav
+
+--Consultar la velocidad de rodra luego de incrementar su velocidad.
+-- incrementarVelocidadEnamorado rodra 
+
+--3
+
+--Consultar si RochaMcQueen puede usar su truco.
+--puedeHacerTruco rochaMcQueen
+
+--Consultar si Gushtav puede usar su truco.
+--puedeHacerTruco gushtav
+
+--Consultar si Rodra puede usar su truco.
+--puedeHacerTruco rodra
+
+--4
+
+--Consultar la nafta de Rocha luego de realizar comboLoco
+--(nafta.comboLoco) rochaMcQueen
+
+--Consultar la velocidad de Rocha luego de realizar comboLoco
+--(velocidad.comboLoco) rochaMcQueen
+
+--Consultar la velocidad de Rodra luego de utilizar queTrucazo cambiando su enamorada a Murcielago
+-- (velocidad.queTrucazo) rodra
+
+--Consultar la velocidad de Gushtav luego de utilizar turbo
+--(velocidad.turbo) gushtav
+
+--Consultar la nafta de Gushtav luego de utilizar 
+--(nafta.turbo) gushtav
+
+--Consultar la velocidad de Rodra luego de utilizar queTrucazo cambiando su enamorada a Murcielago
+--(velocidad.(queTrucazo "Murcielago")
+
+--Consultar la nafta de Rodra luego de utilizar turbo
+-- (nafta.turbo) rodra
