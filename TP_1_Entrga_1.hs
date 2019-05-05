@@ -5,24 +5,67 @@ data Auto = Auto { 	nombre :: String,
 					velocidad :: Velocidad,
 					enamorado :: Enamorado,
 					truco :: Truco} deriving Show
+					
+data Carrera = Carrera {cantidadDevueltas :: CantidadDevueltas,
+						largoPista :: LargoPista,
+						nombresIntegrantesPublico :: Publico,
+						trampa :: Trampa,
+						participantes :: [Auto]} deriving Show
+							
 type Truco = Auto -> Auto
 type Nafta = Float
 type Velocidad = Float
 type Enamorado = String
+type Trampa = Carrera -> Carrera
+type LargoPista = Float
+type Publico = [String]
+type CantidadDevueltas = Int
 
-rochaMcQueen = Auto{ nombre = "RochaMcQueen" , nivelDeNafta = 300 , velocidad = 0 , enamorado = "Ronco" , truco = (deReversa 1000)}
-biankerr = Auto{ nombre = "Biankerr" , nivelDeNafta = 500 , velocidad = 20 , enamorado = "Tinch" , truco = impresionar}  
-gushtav = Auto{ nombre = "Gushtav" , nivelDeNafta = 200 , velocidad = 130 , enamorado = "PetiLaLinda" , truco = nitro}
-rodra = Auto{ nombre = "Rodra" , nivelDeNafta = 0 , velocidad = 50 , enamorado = "Taisa" , truco = fingirAmor "petra"}
+--Autos
+
+rochaMcQueen = Auto{	nombre = "RochaMcQueen", 
+						nivelDeNafta = 300 ,
+						velocidad = 0 ,
+						enamorado = "Ronco",
+						truco = deReversa }
+						
+biankerr = Auto{ 		nombre = "Biankerr" ,
+						nivelDeNafta = 500 ,
+						velocidad = 20 ,
+						enamorado = "Tinch" ,
+						truco = impresionar}  
+						
+gushtav = Auto{ 		nombre = "Gushtav" ,	
+						nivelDeNafta = 200 ,
+						velocidad = 130 ,
+						enamorado = "PetiLaLinda" ,
+						truco = nitro}
+						
+rodra = Auto{ 			nombre = "Rodra" ,
+						nivelDeNafta = 0 ,
+						velocidad = 50 ,
+						enamorado = "Taisa" ,
+						truco = fingirAmor "petra"}
+
+--Carrera
+potreroFunes = Carrera {	cantidadDevueltas = 3,
+							largoPista = 5.0,
+							nombresIntegrantesPublico = ["Ronco", "Tinch", "Dodain"],
+							trampa = sacarAlPistero,
+							participantes = [rochaMcQueen, biankerr, gushtav, rodra]}
+
+							
+--Trucos
 
 aplicarTruco :: Truco
-aplicarTruco unAuto = (truco unAuto) $ unAuto
+aplicarTruco unAuto |puedeHacerTruco unAuto = (truco unAuto) $ unAuto
+					|otherwise = unAuto
 
-deReversa :: Float -> Truco
-deReversa  distanciaPista unAuto = unAuto {nivelDeNafta = (nivelDeNafta unAuto) +(bonusDeNafta distanciaPista)}
+deReversa ::  Truco
+deReversa unAuto = unAuto {nivelDeNafta = (nivelDeNafta unAuto) +(bonusDeNafta unAuto)}
 
-bonusDeNafta :: Float -> Float
-bonusDeNafta unaDistancia = unaDistancia * 0.2
+bonusDeNafta :: Auto -> Nafta
+bonusDeNafta unAuto = (nivelDeNafta unAuto) * 0.2
 
 impresionar :: Truco
 impresionar unAuto = unAuto { velocidad = velocidad unAuto *2}
@@ -33,20 +76,22 @@ nitro unAuto = unAuto { velocidad =  velocidad unAuto + 15}
 fingirAmor :: String -> Truco
 fingirAmor unNombre unAuto  = unAuto{ enamorado = unNombre }
 
+esVocal:: Char -> Bool
+esVocal letra = elem letra "aeiou"
+
+
 modificadorVelocidadCon :: String -> Float
-modificadorVelocidadCon enamorado	|length enamorado <3 = 15
-									|length enamorado <5 = 20
+modificadorVelocidadCon enamorado	|(length (filter esVocal enamorado)) <3 = 15
+									|(length (filter esVocal enamorado)) <5 = 20
 									|otherwise = 30
-								 
 incrementarVelocidadEnamorado :: Truco
 incrementarVelocidadEnamorado unAuto = unAuto { velocidad =  velocidad unAuto + (modificadorVelocidadCon (enamorado unAuto))}								
 
 puedeHacerTruco :: Auto -> Bool
 puedeHacerTruco unAuto = (velocidad unAuto) < 100 && (nivelDeNafta unAuto) >0
 
---suponiendo que la distancia para ir en reversa no se sepa
-comboLoco:: Float-> Truco
-comboLoco distanciaPista unAuto =  (nitro.(deReversa distanciaPista)) unAuto	
+comboLoco:: Truco
+comboLoco unAuto =  (nitro.deReversa ) unAuto	
 
 queTrucazo :: String  -> Truco
 queTrucazo unNombre unAuto = incrementarVelocidadEnamorado (fingirAmor unNombre unAuto )
@@ -54,66 +99,74 @@ queTrucazo unNombre unAuto = incrementarVelocidadEnamorado (fingirAmor unNombre 
 turbo :: Truco
 turbo unAuto = unAuto { nivelDeNafta = 0, velocidad = (velocidad unAuto) + ((nivelDeNafta unAuto) *10)}
 
+-- Trampas
 
---------------------------- Casos de prueba----------------------------
---1 
+sacarAlPistero :: Trampa
+sacarAlPistero unaCarrera = unaCarrera { participantes = tail (participantes unaCarrera)}
 
---Consultar la nafta de RochaMcQueen luego de realizar su truco. 
---(nafta.aplicarTruco) rochaMcQueen
+perderVelocidadLluvia :: Auto -> Auto
+perderVelocidadLluvia unAuto = unAuto{ velocidad = max (velocidad unAuto - 10) 0}
 
---Consultar la nafta de biankerr luego de realizar su truco. 
---(nafta.aplicarTruco) biankerr
+lluvia :: Trampa
+lluvia unaCarrera = unaCarrera{ participantes = map perderVelocidadLluvia (participantes unaCarrera)}
 
---Consultar la nafta de gushtav luego de realizar su truco. 
---(nafta.aplicarTruco) gushtav
+inutilidad :: Truco
+inutilidad unAuto = unAuto
 
---Consultar la enamorada de Rodra cuando elige a Petra.
---(enamorado.aplicarTruco) rodra
+inutilizarTruco :: Auto -> Auto
+inutilizarTruco unAuto = unAuto{truco = inutilidad}
 
---2 
+neutralizarTrucos :: Trampa
+neutralizarTrucos unaCarrera = unaCarrera{ participantes = map inutilizarTruco (participantes unaCarrera)}
 
---Consultar la velocidad de RochaMcQueen luego de incrementar su velocidad.
--- incrementarVelocidadEnamorado rochaMcQueen
+suficienteNafta :: Auto -> Bool
+suficienteNafta unAuto = (nivelDeNafta unAuto) >= 30
 
---Consultar la velocidad de biankerr luego de incrementar su velocidad.
--- incrementarVelocidadEnamorado biankerr
+pocaReserva :: Trampa
+pocaReserva unaCarrera = unaCarrera{ participantes = filter suficienteNafta (participantes unaCarrera)}
 
---Consultar la velocidad de gushtav luego de incrementar su velocidad.
--- incrementarVelocidadEnamorado gushtav
+podio :: Trampa
+podio unaCarrera = unaCarrera{ participantes = take 3 (participantes unaCarrera)}
 
---Consultar la velocidad de rodra luego de incrementar su velocidad.
--- incrementarVelocidadEnamorado rodra 
+-- funciones para correr carrera
 
---3
 
---Consultar si RochaMcQueen puede usar su truco.
---puedeHacerTruco rochaMcQueen
+--uso un max porque no tiene sentido hablar de nafta negativa
+darUnaVueltaAuto :: Float -> Auto -> Auto
+darUnaVueltaAuto unaDistancia unAuto = unAuto { nivelDeNafta = max 0 (nivelDeNafta unAuto - unaDistancia * 0.1 * (velocidad unAuto))}
 
---Consultar si Gushtav puede usar su truco.
---puedeHacerTruco gushtav
+enamoradoPresenteEnPublico :: Publico -> Auto -> Auto
+enamoradoPresenteEnPublico listaPublico unAuto  | elem (enamorado unAuto) listaPublico  = aplicarTruco unAuto
+												|otherwise = unAuto
+												
+aplicarTrampa :: Trampa
+aplicarTrampa unaCarrera = (trampa unaCarrera) $ unaCarrera
 
---Consultar si Rodra puede usar su truco.
---puedeHacerTruco rodra
 
---4
 
---Consultar la nafta de Rocha luego de realizar comboLoco
---(nafta.comboLoco) rochaMcQueen
+darUnaVuelta :: Carrera -> Carrera
+darUnaVuelta unaCarrera = unaCarrera{participantes = map ((darUnaVueltaAuto(largoPista unaCarrera)).(enamoradoPresenteEnPublico (nombresIntegrantesPublico unaCarrera))) (participantes (aplicarTrampa unaCarrera))}
 
---Consultar la velocidad de Rocha luego de realizar comboLoco
---(velocidad.comboLoco) rochaMcQueen
+correrCarrera :: Carrera -> [Carrera]
+correrCarrera unaCarrera = take (cantidadDevueltas unaCarrera) (iterate darUnaVuelta unaCarrera)
 
---Consultar la velocidad de Rodra luego de utilizar queTrucazo cambiando su enamorada a Murcielago
--- (velocidad.queTrucazo) rodra
 
---Consultar la velocidad de Gushtav luego de utilizar turbo
---(velocidad.turbo) gushtav
+-- no quiere andar :/
+--quienGana :: Carrera -> Auto
+--quienGana unaCarrera = (last.(sortBy velocidad)) (participantes (last $ (correrCarrera unaCarrera))
 
---Consultar la nafta de Gushtav luego de utilizar 
---(nafta.turbo) gushtav
 
---Consultar la velocidad de Rodra luego de utilizar queTrucazo cambiando su enamorada a Murcielago
---(velocidad.(queTrucazo "Murcielago")
+--no tiene mucho uso pero se ve bonito para el fold
+aplicarTrucoEspecifico :: Auto -> Truco -> Auto
+aplicarTrucoEspecifico unAuto unTruco = unTruco unAuto
 
---Consultar la nafta de Rodra luego de utilizar turbo
--- (nafta.turbo) rodra
+
+elGranTruco :: Auto -> [Truco] -> Auto 
+elGranTruco unAuto listaTrucos = foldl aplicarTrucoEspecifico unAuto listaTrucos
+
+{- 3.6 
+a) se puede correr pero nunca terminaria	
+b) de la forma que esta programado si, dado el concepto de lazy evaluation, si se quisiera saber el participante mas rapido en la segunda vuelta (funcion no programada, no se podria dado que
+se necesita una lista completa de los participantes, pero de la forma que esta, un simple head daria la respuesta deseada
+c) no dado que nunca terminarian de correr todos los participantes 
+-}
