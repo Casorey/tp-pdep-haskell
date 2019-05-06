@@ -77,12 +77,12 @@ fingirAmor :: String -> Truco
 fingirAmor unNombre unAuto  = unAuto{ enamorado = unNombre }
 
 esVocal:: Char -> Bool
-esVocal letra = elem letra "aeiou"
+esVocal letra = elem letra "aeiouAEIOU"
 
 
 modificadorVelocidadCon :: String -> Float
-modificadorVelocidadCon enamorado	|(length (filter esVocal enamorado)) <3 = 15
-									|(length (filter esVocal enamorado)) <5 = 20
+modificadorVelocidadCon enamorado	|((<3).length.(filter esVocal)) enamorado = 15
+									|((<5).length.(filter esVocal)) enamorado = 20
 									|otherwise = 30
 incrementarVelocidadEnamorado :: Truco
 incrementarVelocidadEnamorado unAuto = unAuto { velocidad =  velocidad unAuto + (modificadorVelocidadCon (enamorado unAuto))}								
@@ -111,7 +111,7 @@ lluvia :: Trampa
 lluvia unaCarrera = unaCarrera{ participantes = map perderVelocidadLluvia (participantes unaCarrera)}
 
 inutilidad :: Truco
-inutilidad unAuto = unAuto
+inutilidad unAuto = id
 
 inutilizarTruco :: Auto -> Auto
 inutilizarTruco unAuto = unAuto{truco = inutilidad}
@@ -121,6 +121,7 @@ neutralizarTrucos unaCarrera = unaCarrera{ participantes = map inutilizarTruco (
 
 suficienteNafta :: Auto -> Bool
 suficienteNafta unAuto = (nivelDeNafta unAuto) >= 30
+suficienteNafta = (>=30).nivelDeNafta
 
 pocaReserva :: Trampa
 pocaReserva unaCarrera = unaCarrera{ participantes = filter suficienteNafta (participantes unaCarrera)}
@@ -133,7 +134,9 @@ podio unaCarrera = unaCarrera{ participantes = take 3 (participantes unaCarrera)
 
 --uso un max porque no tiene sentido hablar de nafta negativa
 darUnaVueltaAuto :: Float -> Auto -> Auto
-darUnaVueltaAuto unaDistancia unAuto = unAuto { nivelDeNafta = max 0 (nivelDeNafta unAuto - unaDistancia * 0.1 * (velocidad unAuto))}
+darUnaVueltaAuto unaDistancia unAuto = unAuto { nivelDeNafta = calcularNafta unAuto unaDistancia}
+
+calcularNafta unAuto unaDistancia = max 0 (nivelDeNafta unAuto - unaDistancia * 0.1 * (velocidad unAuto))
 
 enamoradoPresenteEnPublico :: Publico -> Auto -> Auto
 enamoradoPresenteEnPublico listaPublico unAuto  | elem (enamorado unAuto) listaPublico  = aplicarTruco unAuto
@@ -145,21 +148,24 @@ aplicarTrampa unaCarrera = (trampa unaCarrera) $ unaCarrera
 
 
 darUnaVuelta :: Carrera -> Carrera
-darUnaVuelta unaCarrera = unaCarrera{participantes = map ((darUnaVueltaAuto(largoPista unaCarrera)).(enamoradoPresenteEnPublico (nombresIntegrantesPublico unaCarrera))) (participantes (aplicarTrampa unaCarrera))}
+darUnaVuelta unaCarrera = unaCarrera{cantidadDevueltas = cantidadDevueltas unaCarrera -1, participantes = map ((darUnaVueltaAuto(largoPista unaCarrera)).(enamoradoPresenteEnPublico (nombresIntegrantesPublico unaCarrera))) (participantes (aplicarTrampa unaCarrera))}
 
 correrCarrera :: Carrera -> [Carrera]
 correrCarrera unaCarrera = take (cantidadDevueltas unaCarrera) (iterate darUnaVuelta unaCarrera)
 
+-- Arreglar con !!
+
 
 -- no quiere andar :/
 --quienGana :: Carrera -> Auto
---quienGana unaCarrera = (last.(sortBy velocidad)) (participantes (last $ (correrCarrera unaCarrera))
+--quienGana unaCarrera = (last.(sortBy velocidad)) (participantes (last $ (correrCarrera unaCarrera)))
+
+-- Fold de quienGana entre dos autos 
 
 
 --no tiene mucho uso pero se ve bonito para el fold
 aplicarTrucoEspecifico :: Auto -> Truco -> Auto
-aplicarTrucoEspecifico unAuto unTruco = unTruco unAuto
-
+aplicarTrucoEspecifico unAuto unTruco = unTruco $ unAuto
 
 elGranTruco :: Auto -> [Truco] -> Auto 
 elGranTruco unAuto listaTrucos = foldl aplicarTrucoEspecifico unAuto listaTrucos
@@ -170,3 +176,6 @@ b) de la forma que esta programado si, dado el concepto de lazy evaluation, si s
 se necesita una lista completa de los participantes, pero de la forma que esta, un simple head daria la respuesta deseada
 c) no dado que nunca terminarian de correr todos los participantes 
 -}
+
+
+-- (==10).cantidadDeNafta.impresionar Rodra
