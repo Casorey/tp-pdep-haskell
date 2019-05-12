@@ -65,22 +65,22 @@ deReversa ::  Truco
 deReversa unAuto = unAuto {nivelDeNafta = (nivelDeNafta unAuto) +(bonusDeNafta unAuto)}
 
 bonusDeNafta :: Auto -> Nafta
-bonusDeNafta unAuto = (nivelDeNafta unAuto) * 0.2
+bonusDeNafta  = (0.2*).nivelDeNafta
 
 impresionar :: Truco
-impresionar unAuto = unAuto { velocidad = velocidad unAuto *2}
+impresionar unAuto = unAuto { velocidad = ((2*).velocidad) unAuto }
 
 nitro :: Truco
-nitro unAuto = unAuto { velocidad =  velocidad unAuto + 15}
+nitro unAuto = unAuto { velocidad =  ((15+).velocidad) unAuto}
 
-fingirAmor :: String -> Truco
+fingirAmor :: Enamorado -> Truco
 fingirAmor unNombre unAuto  = unAuto{ enamorado = unNombre }
 
 esVocal:: Char -> Bool
 esVocal letra = elem letra "aeiouAEIOU"
 
 
-modificadorVelocidadCon :: String -> Float
+modificadorVelocidadCon :: Enamorado -> Float
 modificadorVelocidadCon enamorado	|((<3).length.(filter esVocal)) enamorado = 15
 									|((<5).length.(filter esVocal)) enamorado = 20
 									|otherwise = 30
@@ -93,7 +93,7 @@ puedeHacerTruco unAuto = (velocidad unAuto) < 100 && (nivelDeNafta unAuto) >0
 comboLoco:: Truco
 comboLoco unAuto =  (nitro.deReversa ) unAuto	
 
-queTrucazo :: String  -> Truco
+queTrucazo :: Enamorado -> Truco
 queTrucazo unNombre unAuto = incrementarVelocidadEnamorado (fingirAmor unNombre unAuto )
 
 turbo :: Truco
@@ -111,16 +111,15 @@ lluvia :: Trampa
 lluvia unaCarrera = unaCarrera{ participantes = map perderVelocidadLluvia (participantes unaCarrera)}
 
 inutilidad :: Truco
-inutilidad unAuto = id
+inutilidad = id
 
 inutilizarTruco :: Auto -> Auto
-inutilizarTruco unAuto = unAuto{truco = inutilidad}
+inutilizarTruco unAuto = unAuto{truco = inutilidad }
 
 neutralizarTrucos :: Trampa
 neutralizarTrucos unaCarrera = unaCarrera{ participantes = map inutilizarTruco (participantes unaCarrera)}
 
 suficienteNafta :: Auto -> Bool
-suficienteNafta unAuto = (nivelDeNafta unAuto) >= 30
 suficienteNafta = (>=30).nivelDeNafta
 
 pocaReserva :: Trampa
@@ -136,6 +135,7 @@ podio unaCarrera = unaCarrera{ participantes = take 3 (participantes unaCarrera)
 darUnaVueltaAuto :: Float -> Auto -> Auto
 darUnaVueltaAuto unaDistancia unAuto = unAuto { nivelDeNafta = calcularNafta unAuto unaDistancia}
 
+calcularNafta :: Auto -> Float -> Nafta
 calcularNafta unAuto unaDistancia = max 0 (nivelDeNafta unAuto - unaDistancia * 0.1 * (velocidad unAuto))
 
 enamoradoPresenteEnPublico :: Publico -> Auto -> Auto
@@ -148,24 +148,30 @@ aplicarTrampa unaCarrera = (trampa unaCarrera) $ unaCarrera
 
 
 darUnaVuelta :: Carrera -> Carrera
-darUnaVuelta unaCarrera = unaCarrera{cantidadDevueltas = cantidadDevueltas unaCarrera -1, participantes = map ((darUnaVueltaAuto(largoPista unaCarrera)).(enamoradoPresenteEnPublico (nombresIntegrantesPublico unaCarrera))) (participantes (aplicarTrampa unaCarrera))}
+darUnaVuelta unaCarrera = unaCarrera{cantidadDevueltas = cantidadDevueltas unaCarrera -1,  participantes = map (darUnaVueltaAutoConEnamorado unaCarrera) (participantes (aplicarTrampa unaCarrera))}
 
-correrCarrera :: Carrera -> [Carrera]
-correrCarrera unaCarrera = take (cantidadDevueltas unaCarrera) (iterate darUnaVuelta unaCarrera)
+darUnaVueltaAutoConEnamorado :: Carrera -> Auto -> Auto
+darUnaVueltaAutoConEnamorado unaCarrera unAuto = ((darUnaVueltaAuto (largoPista unaCarrera)).(enamoradoPresenteEnPublico (nombresIntegrantesPublico unaCarrera)))unAuto
+	
+correrCarrera :: Carrera -> Carrera
+correrCarrera unaCarrera	| (cantidadDevueltas unaCarrera) > 0 = correrCarrera (darUnaVuelta unaCarrera)
+							| otherwise = unaCarrera 
 
--- Arreglar con !!
 
+comparaVelocidadAutos :: Auto -> Auto ->Auto
+comparaVelocidadAutos auto1 auto2	|velocidad auto1 > velocidad auto2 = auto1
+									|otherwise = auto2
+									
+quienGana :: Carrera -> Auto
+quienGana unaCarrera = foldl1 comparaVelocidadAutos (participantes ((correrCarrera unaCarrera)))
 
--- no quiere andar :/
---quienGana :: Carrera -> Auto
---quienGana unaCarrera = (last.(sortBy velocidad)) (participantes (last $ (correrCarrera unaCarrera)))
-
--- Fold de quienGana entre dos autos 
 
 
 --no tiene mucho uso pero se ve bonito para el fold
 aplicarTrucoEspecifico :: Auto -> Truco -> Auto
 aplicarTrucoEspecifico unAuto unTruco = unTruco $ unAuto
+
+
 
 elGranTruco :: Auto -> [Truco] -> Auto 
 elGranTruco unAuto listaTrucos = foldl aplicarTrucoEspecifico unAuto listaTrucos
@@ -177,5 +183,3 @@ se necesita una lista completa de los participantes, pero de la forma que esta, 
 c) no dado que nunca terminarian de correr todos los participantes 
 -}
 
-
--- (==10).cantidadDeNafta.impresionar Rodra
